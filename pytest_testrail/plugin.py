@@ -12,9 +12,14 @@ DT_FORMAT = '%d-%m-%Y %H:%M:%S'
 
 TESTRAIL_PREFIX = 'testrail'
 
+
 ADD_RESULTS_URL = 'add_results_for_cases/{}/'
 ADD_TESTRUN_URL = 'add_run/{}'
+GET_TESTRUNS_URL = 'get_runs/{}'
+GET_TESTCASES_ID_URL = 'get_tests/{}'
+GET_TESTRUN_URL = 'get_run/{}'
 
+TEST_LIST = []
 
 def testrail(*ids):
     """
@@ -25,6 +30,30 @@ def testrail(*ids):
     :return pytest.mark:
     """
     return pytest.mark.testrail(ids=ids)
+
+
+def get_tests_list(client, run_id, cert):
+    response = client.send_get(
+        GET_TESTCASES_ID_URL.format(run_id),
+        cert_check=cert
+    )
+    global TEST_LIST
+    for test in response:
+        TEST_LIST.append(str(test['case_id']))
+    return TEST_LIST
+
+
+def skiptest(ids):
+    """
+    decorator to mark test o skip
+    :param ids:
+    :return:
+    """
+    global TEST_LIST
+    if ids not in TEST_LIST:
+        return pytest.mark.skip(msg='ok')
+    else:
+        return  pytest.mark.skiptest(ids=ids)
 
 
 def get_test_outcome(outcome):
@@ -68,7 +97,7 @@ def get_testrail_keys(items):
 
 class TestRailPlugin(object):
     def __init__(
-            self, client, assign_user_id, project_id, suite_id, milestone_id, cert_check, tr_name):
+            self, client, assign_user_id, project_id, suite_id, milestone_id, is_completed, cert_check, tr_name, run_id):
         self.assign_user_id = assign_user_id
         self.cert_check = cert_check
         self.client = client
@@ -77,7 +106,9 @@ class TestRailPlugin(object):
         self.suite_id = suite_id
         self.testrun_id = 0
         self.milestone_id = milestone_id
+        self.is_comleted = is_completed
         self.testrun_name = tr_name
+        self.run_id = run_id
 
     # pytest hooks
 
@@ -85,16 +116,18 @@ class TestRailPlugin(object):
     def pytest_collection_modifyitems(self, session, config, items):
         tr_keys = get_testrail_keys(items)
         if self.testrun_name is None:
-            self.testrun_name = testrun_name()
+           #self.testrun_name = testrun_name()
+            self.get_tests_from_run(run_id=self.run_id)                   # need to add globally
 
-        self.create_test_run(
-            self.assign_user_id,
-            self.project_id,
-            self.suite_id,
-            self.testrun_name,
-            self.milestone_id,
-            tr_keys
-        )
+        else:
+            self.create_test_run(
+                self.assign_user_id,
+                self.project_id,
+                self.suite_id,
+                self.testrun_name,
+                self.milestone_id,
+                tr_keys
+            )
 
     @pytest.hookimpl(tryfirst=True, hookwrapper=True)
     def pytest_runtest_makereport(self, item, call):
@@ -160,3 +193,64 @@ class TestRailPlugin(object):
                 print('Failed to create testrun: {}'.format(response))
             else:
                 self.testrun_id = response['id']
+
+    def get_test_runs(
+            self, project_id, milestone_id, is_completed):
+        """
+        Get incompleted test runs
+        :param project_id: 1 to return completed test runs only. 0 to return active test runs only.
+        :param milestone_id:
+        :param is_completed: 0 - to return active test runs
+        :return:
+        """
+        data = {
+            'milestone_id': milestone_id,
+            'is_completed': is_completed
+        }
+
+        response = self.client.send_get(
+            GET_TESTRUNS_URL.format(project_id),
+            data,
+            self.cert_check
+        )
+        for key, _ in response.items():
+            if key == 'error':
+                print('Faild to get test_runs: {}'.format(response))
+            else:
+                return response
+
+    def get_tests_from_run(self, run_id):
+        response = self.client.send_get(
+            GET_TESTCASES_ID_URL.format(run_id),
+            self.cert_check
+        )
+        self.tests_list_id = [test['id'] for test in response]
+
+        self.testrun_id = self.run_id
+
+
+
+    def get_tests_cases(self, runs_id_list):
+
+        """
+        Get tests cases ids for incompleted runs
+        :param runs_id_list:
+        :return: dict key=run_id, val=list_of_cases for run
+        """
+
+        run_tests = {}
+
+        for run_id in runs_id_list:
+            _run_id = run_id['id']
+
+            #data = {'run_id':_run_id}
+
+            respons = self.client.send_get(
+                GET_TESTCASES_ID_URL.format(_run_id, self.cert_check)
+            )
+            tests = [test['id'] for test in respons]
+            run_tests[_run_id] = test
+
+        return run_tests
+
+
