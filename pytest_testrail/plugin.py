@@ -21,6 +21,7 @@ GET_TESTRUN_URL = 'get_run/{}'
 
 TEST_LIST = []
 
+
 def testrail(*ids):
     """
     Decorator to mark tests with testcase ids.
@@ -227,8 +228,6 @@ class TestRailPlugin(object):
         self.tests_list_id = [test['id'] for test in response]
 
         self.testrun_id = self.run_id
-
-
 
     def get_tests_cases(self, runs_id_list):
 
