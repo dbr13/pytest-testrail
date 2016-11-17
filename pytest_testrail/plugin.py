@@ -39,7 +39,7 @@ def get_tests_list(client, run_id, cert):
     )
     global TEST_LIST
     for test in response:
-        TEST_LIST.append(str(test['case_id']))
+        TEST_LIST.append('C{}'.format(test['case_id']))
     return TEST_LIST
 
 
