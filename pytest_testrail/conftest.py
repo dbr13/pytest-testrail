@@ -64,6 +64,7 @@ def pytest_configure(config):
                 project_id=cfg_file.get('TESTRUN', 'project_id'),
                 suite_id=cfg_file.get('TESTRUN', 'suite_id'),
                 is_completed=cfg_file.get('TESTRUN', 'is_completed'),
+                type_id=cfg_file.get('TESTRUN', 'type_id'),
                 cert_check=ssl_cert_check,
                 tr_name=tr_name,
                 run_id=run_id,
