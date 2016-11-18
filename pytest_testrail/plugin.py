@@ -15,9 +15,8 @@ TESTRAIL_PREFIX = 'testrail'
 
 ADD_RESULTS_URL = 'add_results_for_cases/{}/'
 ADD_TESTRUN_URL = 'add_run/{}'
-GET_TESTRUNS_URL = 'get_runs/{}'
 GET_TESTCASES_ID_URL = 'get_tests/{}'
-GET_TESTRUN_URL = 'get_run/{}'
+
 
 TEST_LIST = []
 
