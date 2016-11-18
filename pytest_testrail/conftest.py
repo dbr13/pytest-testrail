@@ -1,8 +1,10 @@
 import configparser
+import pytest
 
 from .plugin import TestRailPlugin
 from .testrail_api import APIClient
 from .plugin import get_tests_list
+
 
 
 def pytest_addoption(parser):
@@ -37,6 +39,7 @@ def pytest_addoption(parser):
         required=False,
         help='Name gives milestone_id for creating new run'
     )
+
 
 
 def pytest_configure(config):
