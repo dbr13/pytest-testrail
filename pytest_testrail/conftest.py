@@ -29,7 +29,13 @@ def pytest_addoption(parser):
         '--run_id',
         action='store',
         required=False,
-        help='Name give run_id for running'
+        help='Name gives run_id for running'
+    )
+    group.addoption(
+        '--milestone_id',
+        action='store',
+        required=False,
+        help='Name gives milestone_id for creating new run'
     )
 
 
@@ -42,6 +48,7 @@ def pytest_configure(config):
         ssl_cert_check = True
         tr_name = config.getoption('--tr_name')
         run_id = config.getoption('--run_id')
+        milestone_id = config.getoption('--milestone_id')
         if run_id:
             get_tests_list(client=client, run_id=run_id, cert=ssl_cert_check)
 
@@ -54,11 +61,11 @@ def pytest_configure(config):
                 assign_user_id=cfg_file.get('TESTRUN', 'assignedto_id'),
                 project_id=cfg_file.get('TESTRUN', 'project_id'),
                 suite_id=cfg_file.get('TESTRUN', 'suite_id'),
-                milestone_id=cfg_file.get('TESTRUN', 'milestone_id'),
                 is_completed=cfg_file.get('TESTRUN', 'is_completed'),
                 cert_check=ssl_cert_check,
                 tr_name=tr_name,
-                run_id=run_id
+                run_id=run_id,
+                milestone_id=milestone_id
             )
         )
 
@@ -67,3 +74,4 @@ def read_config_file(configfile):
     config = configparser.ConfigParser()
     config.read(configfile)
     return config
+

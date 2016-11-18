@@ -6,12 +6,12 @@ PYTEST_TO_TESTRAIL_STATUS = {
     "passed": 1,
     "failed": 5,
     "skipped": 2,
+    "n/a": 7
 }
 
 DT_FORMAT = '%d-%m-%Y %H:%M:%S'
 
 TESTRAIL_PREFIX = 'testrail'
-
 
 ADD_RESULTS_URL = 'add_results_for_cases/{}/'
 ADD_TESTRUN_URL = 'add_run/{}'
@@ -25,11 +25,22 @@ TEST_LIST = []
 def testrail(*ids):
     """
     Decorator to mark tests with testcase ids.
+    It feryfies TEST_LIST for skipping tests
 
+    Note: currently if we add more then on csae_id
+    and some of them will be merked skipped this test will skipped totally
     ie. @testrail('C123', 'C12345')
 
     :return pytest.mark:
     """
+    global TEST_LIST
+    idds = []
+    for idn in ids:
+        if len(TEST_LIST) == 0 or idn in TEST_LIST:
+            idds.append(idn)
+        else:
+            return pytest.mark.skip(msg='Test is out of run')
+    ids = tuple(map(lambda id: id, idds))
     return pytest.mark.testrail(ids=ids)
 
 
@@ -42,19 +53,6 @@ def get_tests_list(client, run_id, cert):
     for test in response:
         TEST_LIST.append('C{}'.format(test['case_id']))
     return TEST_LIST
-
-
-def skiptest(ids):
-    """
-    decorator to mark test o skip
-    :param ids:
-    :return:
-    """
-    global TEST_LIST
-    if ids not in TEST_LIST:
-        return pytest.mark.skip(msg='ok')
-    else:
-        return  pytest.mark.skiptest(ids=ids)
 
 
 def get_test_outcome(outcome):
@@ -94,6 +92,11 @@ def get_testrail_keys(items):
                 )
             )
     return testcaseids
+
+
+# def get_run_keys(items):
+#     """Return Run case ids from Testrail"""
+#     testcasesids = []
 
 
 class TestRailPlugin(object):
@@ -195,61 +198,62 @@ class TestRailPlugin(object):
             else:
                 self.testrun_id = response['id']
 
-    def get_test_runs(
-            self, project_id, milestone_id, is_completed):
-        """
-        Get incompleted test runs
-        :param project_id: 1 to return completed test runs only. 0 to return active test runs only.
-        :param milestone_id:
-        :param is_completed: 0 - to return active test runs
-        :return:
-        """
-        data = {
-            'milestone_id': milestone_id,
-            'is_completed': is_completed
-        }
-
-        response = self.client.send_get(
-            GET_TESTRUNS_URL.format(project_id),
-            data,
-            self.cert_check
-        )
-        for key, _ in response.items():
-            if key == 'error':
-                print('Faild to get test_runs: {}'.format(response))
-            else:
-                return response
-
     def get_tests_from_run(self, run_id):
         response = self.client.send_get(
             GET_TESTCASES_ID_URL.format(run_id),
             self.cert_check
         )
-        self.tests_list_id = [test['id'] for test in response]
+        self.tests_list_id = [test['case_id'] for test in response]
 
         self.testrun_id = self.run_id
 
-    def get_tests_cases(self, runs_id_list):
 
-        """
-        Get tests cases ids for incompleted runs
-        :param runs_id_list:
-        :return: dict key=run_id, val=list_of_cases for run
-        """
 
-        run_tests = {}
-
-        for run_id in runs_id_list:
-            _run_id = run_id['id']
-
+    # def get_tests_cases(self, runs_id_list):
+    #
+    #     """
+    #     Get tests cases ids for incompleted runs
+    #     :param runs_id_list:
+    #     :return: dict key=run_id, val=list_of_cases for run
+    #     """
+    #
+    #     run_tests = {}
+    #
+    #     for run_id in runs_id_list:
+    #         _run_id = run_id['id']
+    #
             #data = {'run_id':_run_id}
+            #
+            # respons = self.client.send_get(
+            #     GET_TESTCASES_ID_URL.format(_run_id, self.cert_check)
+            # )
+            # tests = [test ['id'] for test in respons]
+            # run_tests[_run_id] = test
+        #
+        # return run_tests
 
-            respons = self.client.send_get(
-                GET_TESTCASES_ID_URL.format(_run_id, self.cert_check)
-            )
-            tests = [test['id'] for test in respons]
-            run_tests[_run_id] = test
-
-        return run_tests
-
+    # def get_test_runs(
+    #         self, project_id, milestone_id, is_completed):
+    #     """
+    #     Get incompleted test runs
+    #     :param project_id: 1 to return completed test runs only. 0 to return active test runs only.
+    #     :param milestone_id:
+    #     :param is_completed: 0 - to return active test runs
+    #     :return:
+    #     """
+    #     data = {
+    #         'milestone_id': milestone_id,
+    #         'is_completed': is_completed
+    #     }
+    #
+    #     response = self.client.send_get(
+    #         GET_TESTRUNS_URL.format(project_id),
+    #         data,
+    #         self.cert_check
+    #     )
+    #     for key, _ in response.items():
+    #         if key == 'error':
+    #             print('Faild to get test_runs: {}'.format(response))
+    #         else:
+    #             return response
 
