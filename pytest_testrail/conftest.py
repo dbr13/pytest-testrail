@@ -1,5 +1,4 @@
 import configparser
-import pytest
 
 from .plugin import TestRailPlugin
 from .testrail_api import APIClient

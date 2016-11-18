@@ -26,9 +26,9 @@ def testrail(*ids):
     Decorator to mark tests with testcase ids.
     It feryfies TEST_LIST for skipping tests
 
-    Note: currently if we add more then on case_id
-    and some of them will be merked skipped this test will skipped totally
-    ie. @testrail('C123', 'C12345')
+    Note: currently if we add more then one case_id
+    and some of them will be merked skipped this test will skipped totally ie. @testrail('C123', 'C12345')
+    ie. @testrail('C12345')
 
     :return pytest.mark:
     """
