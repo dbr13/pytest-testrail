@@ -2,6 +2,8 @@ import configparser
 
 from .plugin import TestRailPlugin
 from .testrail_api import APIClient
+from .plugin import get_tests_list
+
 
 
 def pytest_addoption(parser):
@@ -24,6 +26,19 @@ def pytest_addoption(parser):
         required=False,
         help='Name given to testrun, that appears in TestRail'
     )
+    group.addoption(
+        '--run_id',
+        action='store',
+        required=False,
+        help='Name gives run_id for running'
+    )
+    group.addoption(
+        '--milestone_id',
+        action='store',
+        required=False,
+        help='Name gives milestone_id for creating new run'
+    )
+
 
 
 def pytest_configure(config):
@@ -34,8 +49,12 @@ def pytest_configure(config):
         client.password = cfg_file.get('API', 'password')
         ssl_cert_check = True
         tr_name = config.getoption('--tr_name')
+        run_id = config.getoption('--run_id')
+        milestone_id = config.getoption('--milestone_id')
+        if run_id:
+            get_tests_list(client=client, run_id=run_id, cert=ssl_cert_check)
 
-        if config.getoption('--no-ssl-cert-check') is True:
+        elif config.getoption('--no-ssl-cert-check') is True:
             ssl_cert_check = False
 
         config.pluginmanager.register(
@@ -44,9 +63,12 @@ def pytest_configure(config):
                 assign_user_id=cfg_file.get('TESTRUN', 'assignedto_id'),
                 project_id=cfg_file.get('TESTRUN', 'project_id'),
                 suite_id=cfg_file.get('TESTRUN', 'suite_id'),
-                milestone_id=cfg_file.get('TESTRUN', 'milestone_id'),
+                is_completed=cfg_file.get('TESTRUN', 'is_completed'),
+                type_id=cfg_file.get('TESTRUN', 'type_id'),
                 cert_check=ssl_cert_check,
-                tr_name=tr_name
+                tr_name=tr_name,
+                run_id=run_id,
+                milestone_id=milestone_id
             )
         )
 
@@ -55,3 +77,4 @@ def read_config_file(configfile):
     config = configparser.ConfigParser()
     config.read(configfile)
     return config
+
