@@ -5,7 +5,6 @@ from .testrail_api import APIClient
 from .plugin import get_tests_list
 
 
-
 def pytest_addoption(parser):
     group = parser.getgroup('testrail')
     group.addoption(
@@ -40,7 +39,6 @@ def pytest_addoption(parser):
     )
 
 
-
 def pytest_configure(config):
     if config.option.testrail:
         cfg_file = read_config_file(config.getoption("--testrail"))
@@ -63,7 +61,6 @@ def pytest_configure(config):
                 assign_user_id=cfg_file.get('TESTRUN', 'assignedto_id'),
                 project_id=cfg_file.get('TESTRUN', 'project_id'),
                 suite_id=cfg_file.get('TESTRUN', 'suite_id'),
-                is_completed=cfg_file.get('TESTRUN', 'is_completed'),
                 type_id=cfg_file.get('TESTRUN', 'type_id'),
                 cert_check=ssl_cert_check,
                 tr_name=tr_name,
