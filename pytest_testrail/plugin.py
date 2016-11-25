@@ -2,12 +2,10 @@ from datetime import datetime
 import pytest
 
 
-PYTEST_TO_TESTRAIL_STATUS = {
-    "passed": 1,
-    "failed": 5,
-    "skipped": 2,
-    "n/a": 7
-}
+PYTEST_TO_TESTRAIL_STATUS = {"passed": 1,
+                             "failed": 5,
+                             "skipped": 2,
+                             "n/a": 7}
 
 DT_FORMAT = '%d-%m-%Y %H:%M:%S'
 
@@ -95,7 +93,7 @@ def get_testrail_keys(items):
 
 class TestRailPlugin(object):
     def __init__(self, client, assign_user_id, project_id,
-                 suite_id, milestone_id, is_completed,
+                 suite_id, milestone_id,
                  cert_check, tr_name, run_id, type_id):
 
         self.assign_user_id = assign_user_id
@@ -106,10 +104,9 @@ class TestRailPlugin(object):
         self.suite_id = suite_id
         self.testrun_id = 0
         self.milestone_id = milestone_id
-        self.is_comleted = is_completed
         self.testrun_name = tr_name
         self.run_id = run_id
-        self.type_id = type_id
+        self.type_id = int(type_id)
 
     # pytest hooks
 
@@ -167,7 +164,7 @@ class TestRailPlugin(object):
                 'status_id': status,
             }
             try:
-                if self.tests_case_type_ids[test_id] == self.type_id:
+                if self.tests_case_type_ids[test_id] != self.type_id:
                     data = {
                         'case_id': test_id,
                         'status_id': PYTEST_TO_TESTRAIL_STATUS['n/a']
@@ -216,5 +213,3 @@ class TestRailPlugin(object):
         self.tests_case_type_ids = {test['case_id']: test['type_id'] for test in response}
 
         self.testrun_id = self.run_id
-
-
